@@ -4,18 +4,9 @@ exit
 #endif
 
 #include "nanoprofiler.h"
+#include "nanoprofiler.c"
 #include <stdlib.h>
 #include <time.h>
-
-#define NANOPROFILER_FOR_EACH(LABEL) \
-  LABEL(NP_MAIN) \
-  LABEL(NP_GENERATE_INPUT_DATA) \
-  LABEL(NP_PROCEDURE_CALL) \
-
-#define NANOPROFILER_LABEL_AS_ENUM(ENUM) ENUM,
-#define NANOPROFILER_LABEL_AS_STRING(STRING) #STRING,
-enum NANOPROFILER_ENUM {NANOPROFILER_FOR_EACH(NANOPROFILER_LABEL_AS_ENUM)};
-static const char * NANOPROFILER_STRINGS[] = {NANOPROFILER_FOR_EACH(NANOPROFILER_LABEL_AS_STRING)};
 
 enum {BYTES = 10000};
 
@@ -53,26 +44,26 @@ procedure(struct TYPE *input, struct TYPE *output) {
 
 int main() {
   NanoprofilerAllocate(5000000);
-  NanoprofilerBegin(0, NP_MAIN);
+  NanoprofilerBegin(0, "Main");
 
   srand(time(NULL));
 
   for (int i = 0; i < 10000; i += 1) {
     struct TYPE input;
-    NanoprofilerBegin(0, NP_GENERATE_INPUT_DATA);
+    NanoprofilerBegin(0, "Generate input data");
     for (int j = 0; j < BYTES; j += 1) {
       input.bytes[j] = rand() % 255;
     }
-    NanoprofilerEnd(0, NP_GENERATE_INPUT_DATA);
-    NanoprofilerBegin(0, NP_PROCEDURE_CALL);
+    NanoprofilerEnd(0, "Generate input data");
+    NanoprofilerBegin(0, "Procedure call");
     #if BY_VAL == 1
     procedure(input, &output);
     #else
     procedure(&input, &output);
     #endif
-    NanoprofilerEnd(0, NP_PROCEDURE_CALL);
+    NanoprofilerEnd(0, "Procedure call");
   }
 
-  NanoprofilerEnd(0, NP_MAIN);
-  NanoprofilerOutputAndFree(0, NANOPROFILER_STRINGS);
+  NanoprofilerEnd(0, "Main");
+  NanoprofilerOutputAndFree(0);
 }
